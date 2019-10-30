@@ -1,9 +1,10 @@
 import React, { createContext, useReducer, Dispatch } from 'react';
-import { Redirect, Route } from 'react-router-dom';
-import { IonApp, IonRouterOutlet } from '@ionic/react';
+import { Redirect, Route, BrowserRouter } from 'react-router-dom';
+import { IonApp, IonRouterOutlet, IonSplitPane, IonPage } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
 
 import Home from './pages/Home';
+import Menu from './pages/Menu';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -58,21 +59,17 @@ export const listContext = createContext<Partial<listContextInterface>>({});
 const listReducer = (state: listInitInterface[], action: Action) => {
 	switch (action.type) {
 		case 'add': {
-			console.log('add');
 			return [...state, action.payload];
 		}
 		case 'remove': {
-			console.log('remove');
 			let index = state.indexOf(action.payload);
-			console.log(index);
-			state.slice(index, 1);
-			return state;
+			state.splice(index, 1);
+			return [...state];
 		}
 		case 'done': {
-			console.log('done');
 			let index = state.indexOf(action.payload);
-			state[index].checked = true;
-			return state;
+			state[index].checked = !state[index].checked;
+			return [...state];
 		}
 		default:
 			return state;
@@ -81,17 +78,24 @@ const listReducer = (state: listInitInterface[], action: Action) => {
 
 const App: React.FC = () => {
 	const [list, dispatch] = useReducer(listReducer, listInit);
+	console.log(list);
 	return (
-		<IonApp>
-			<IonReactRouter>
-				<listContext.Provider value={{ list, dispatch }}>
-					<IonRouterOutlet>
-						<Route path='/home' component={Home} />
-						<Route exact path='/' render={() => <Redirect to='/home' />} />
-					</IonRouterOutlet>
-				</listContext.Provider>
-			</IonReactRouter>
-		</IonApp>
+		<BrowserRouter>
+			<IonApp>
+				<IonSplitPane contentId='main'>
+					<Menu />
+					<IonPage id='main'>
+						<listContext.Provider value={{ list, dispatch }}>
+							<IonRouterOutlet>
+								<Route path='/:tab(home)' component={Home} />
+								<Route path='/:tab(add)' component={Home} />
+								<Route exact path='/' render={() => <Redirect to='/home' />} />
+							</IonRouterOutlet>
+						</listContext.Provider>
+					</IonPage>
+				</IonSplitPane>
+			</IonApp>
+		</BrowserRouter>
 	);
 };
 
